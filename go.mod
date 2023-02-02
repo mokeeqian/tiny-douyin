@@ -5,7 +5,6 @@ go 1.19
 require (
 	github.com/a76yyyy/ErrnoCode v1.0.2
 	github.com/a76yyyy/errors v1.0.3
-	github.com/a76yyyy/tiktok v1.0.2
 	github.com/cloudwego/kitex v0.4.2
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -20,6 +19,7 @@ require (
 )
 
 require (
+	github.com/apache/thrift v0.15.0 // indirect
 	github.com/cloudwego/hertz v0.3.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
@@ -58,5 +58,4 @@ require (
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	moul.io/zapgorm2 v1.1.3 // indirect
 )
