@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mokeeqian/tiny-douyin/src/common"
 	"github.com/mokeeqian/tiny-douyin/src/middleware"
-	"github.com/mokeeqian/tiny-douyin/src/model"
+	"github.com/mokeeqian/tiny-douyin/src/model/db"
 	"github.com/mokeeqian/tiny-douyin/src/service"
 	"net/http"
 	"strconv"
@@ -145,7 +145,7 @@ func DoLogin(username string, password string) (UserIdTokenResponse, error) {
 
 	// 用户存在性校验
 	// FIXME: 这里的返回msg有点问题
-	var login model.User
+	var login db.User
 	err = service.IsUserExist(username, password, &login)
 	if err != nil {
 		return response, err
@@ -208,7 +208,7 @@ func DoInfo(rawId string) (UserInfoQueryResponse, error) {
 	}
 
 	//1.获取用户信息
-	var user model.User
+	var user db.User
 	err = service.GetUserById(uint(userId), &user)
 	if err != nil {
 		return userInfoQueryResponse, err

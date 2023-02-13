@@ -3,7 +3,7 @@
  * mokeeqian
  */
 
-package model
+package db
 
 import "github.com/jinzhu/gorm"
 

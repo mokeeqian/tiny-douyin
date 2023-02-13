@@ -32,8 +32,8 @@ func InitRouter() *gin.Engine {
 		//
 		//}
 		//
-		//// feed
-		//douyinGroup.GET("/feed/", controller.Feed)
+		// feed
+		douyinGroup.GET("/feed/", controller.Feed)
 		//
 		//favoriteGroup := douyinGroup.Group("favorite")
 		//{

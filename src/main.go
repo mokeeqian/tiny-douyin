@@ -7,7 +7,7 @@ package main
 
 import (
 	"github.com/mokeeqian/tiny-douyin/src/dao"
-	"github.com/mokeeqian/tiny-douyin/src/model"
+	"github.com/mokeeqian/tiny-douyin/src/model/db"
 	"github.com/mokeeqian/tiny-douyin/src/routes"
 )
 
@@ -24,11 +24,12 @@ func main() {
 	// 注册路由
 	r := routes.InitRouter()
 
-	dao.SqlSession.AutoMigrate(&model.User{})
-	dao.SqlSession.AutoMigrate(&model.Video{})
-	dao.SqlSession.AutoMigrate(&model.Comment{})
-	dao.SqlSession.AutoMigrate(&model.Favorite{})
-	dao.SqlSession.AutoMigrate(&model.Follow{})
+	dao.SqlSession.AutoMigrate(&db.User{})
+	dao.SqlSession.AutoMigrate(&db.Video{})
+	dao.SqlSession.AutoMigrate(&db.Comment{})
+	dao.SqlSession.AutoMigrate(&db.Favorite{})
+	dao.SqlSession.AutoMigrate(&db.Follow{})
+	dao.SqlSession.AutoMigrate(&db.Message{})
 
 	errRun := r.Run(":12138")
 
