@@ -8,6 +8,7 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/mokeeqian/tiny-douyin/src/controller"
+	"github.com/mokeeqian/tiny-douyin/src/middleware"
 )
 
 func InitRouter() *gin.Engine {
@@ -18,8 +19,8 @@ func InitRouter() *gin.Engine {
 		// user
 		userGroup := douyinGroup.Group("/user")
 		{
-			//userGroup.GET("/", middleware.JwtMiddleware(), controller.UserInfo)
-			//userGroup.POST("/login/", controller.UserLogin)
+			userGroup.GET("/", middleware.JwtMiddleware(), controller.UserInfo)
+			userGroup.POST("/login/", controller.UserLogin)
 			userGroup.POST("/register/", controller.UserRegister)
 		}
 
