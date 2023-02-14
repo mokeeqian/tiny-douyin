@@ -72,7 +72,7 @@ func Feed(c *gin.Context) {
 
 	var feedVideoList []FeedVideo
 	feedVideoList = make([]FeedVideo, 0)
-	videoList, _ := service.FeedGet(lastTime)
+	videoList, _ := service.GetFeed(lastTime)
 	var newTime int64 = 0 //返回的视频的最久的一个的时间
 	for _, x := range videoList {
 		var tmp FeedVideo

@@ -24,8 +24,8 @@ import (
 // feed 每次返回视频数目
 const videoNum = 2
 
-// FeedGet 获得视频列表
-func FeedGet(lastTime int64) ([]db.Video, error) {
+// GetFeed 获得视频列表
+func GetFeed(lastTime int64) ([]db.Video, error) {
 	//t := time.Now()
 	//fmt.Println(t)
 	if lastTime == 0 { //没有传入参数或者视屏已经刷完

@@ -34,13 +34,13 @@ func InitRouter() *gin.Engine {
 
 		// feed
 		douyinGroup.GET("/feed/", controller.Feed)
-		//
-		//favoriteGroup := douyinGroup.Group("favorite")
-		//{
-		//	favoriteGroup.POST("/action/", middleware.JwtMiddleware(), controller.Favorite)
-		//	favoriteGroup.GET("/list/", middleware.JwtMiddleware(), controller.FavoriteList)
-		//}
-		//
+
+		favoriteGroup := douyinGroup.Group("favorite")
+		{
+			favoriteGroup.POST("/action/", middleware.JwtMiddleware(), controller.Favorite)
+			favoriteGroup.GET("/list/", middleware.JwtMiddleware(), controller.FavoriteList)
+		}
+
 		//// comment
 		//commentGroup := douyinGroup.Group("/comment")
 		//{
