@@ -77,6 +77,7 @@ func GetVideoList(userId uint) []db.Video {
 }
 
 // CosUpload 上传至云端，返回url
+// 该实现参考腾讯云官方GO SDK
 func CosUpload(fileName string, reader io.Reader) (string, error) {
 	link := "https://qian-1258498110.cos.ap-nanjing.myqcloud.com"
 	//u, _ := url.Parse(fmt.Sprintf(dao.COS_URL_FORMAT, dao.COS_BUCKET_NAME, dao.COS_APP_ID, dao.COS_REGION))

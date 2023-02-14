@@ -11,51 +11,35 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
+// ReturnAuthor 视频作者结构封装
 type ReturnAuthor struct {
 	AuthorId      uint   `json:"author_id"`
 	Name          string `json:"name"`
-	FollowCount   uint   `json:"follow_count"`
-	FollowerCount uint   `json:"follower_count"`
+	FollowCount   int64  `json:"follow_count"`
+	FollowerCount int64  `json:"follower_count"`
 	IsFollow      bool   `json:"is_follow"`
 }
-type ReturnMyself struct {
-	AuthorId      uint   `json:"author_id"`
-	Name          string `json:"name"`
-	FollowCount   uint   `json:"follow_count"`
-	FollowerCount uint   `json:"follower_count"`
-}
 
+// ReturnVideo 创作视频结构封装
 type ReturnVideo struct {
 	VideoId       uint         `json:"video_id"`
 	Author        ReturnAuthor `json:"author"`
 	PlayUrl       string       `json:"play_url"`
 	CoverUrl      string       `json:"cover_url"`
-	FavoriteCount uint         `json:"favorite_count"`
-	CommentCount  uint         `json:"comment_count"`
-	IsFavorite    bool         `json:"is_favorite"`
-	Title         string       `json:"title"`
-}
-type ReturnVideo2 struct {
-	VideoId       uint         `json:"video_id"`
-	Author        ReturnMyself `json:"author"`
-	PlayUrl       string       `json:"play_url"`
-	CoverUrl      string       `json:"cover_url"`
-	FavoriteCount uint         `json:"favorite_count"`
-	CommentCount  uint         `json:"comment_count"`
+	FavoriteCount int64        `json:"favorite_count"`
+	CommentCount  int64        `json:"comment_count"`
 	IsFavorite    bool         `json:"is_favorite"`
 	Title         string       `json:"title"`
 }
 
+// VideoListResponse 创作列表响应
 type VideoListResponse struct {
 	common.Response
 	VideoList []ReturnVideo `json:"video_list"`
-}
-type VideoListResponse2 struct {
-	common.Response
-	VideoList []ReturnVideo2 `json:"video_list"`
 }
 
 // Publish 视频投稿
@@ -77,15 +61,14 @@ func Publish(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("标题: " + title)
+	//fmt.Println("标题: " + title)
 
-	//3.返回至前端页面的展示信息
 	fileName := filepath.Base(data.Filename)
 	finalName := fmt.Sprintf("%d_%s", userId, fileName) // user_id + filename
 	//先存储到本地文件夹，再保存到云端，获取封面后最后删除
 	saveFile := filepath.Join("../../videos/", finalName)
 
-	// 如果不存在viceos文件夹创建
+	// 如果不存在viceos文件夹,创建
 	if _, err := os.Stat("../../videos"); os.IsNotExist(err) {
 		err := os.Mkdir("../../videos", os.ModePerm)
 		if err != nil {
@@ -132,7 +115,7 @@ func Publish(c *gin.Context) {
 	//jpeg.Encode(imgw, img, &jpeg.Options{100})
 
 	// 使用腾讯云,
-	//直接传至云端，不用存储到本地,
+	//直接传至云端
 	coverUrl, err := service.CosUpload(coverName, img)
 	if err != nil {
 		c.JSON(http.StatusOK, common.Response{
@@ -158,125 +141,127 @@ func Publish(c *gin.Context) {
 		CommentCount:  0,
 		Title:         title,
 	}
+	// 插入数据库
 	service.AddVideo(&video)
 }
 
-//func PublishList(c *gin.Context) {
-//	//1.中间件鉴权token
-//	getHostId, _ := c.Get("user_id")
-//	var HostId uint
-//	if v, ok := getHostId.(uint); ok {
-//		HostId = v
-//	}
-//	//2.查询要查看用户的id的所有视频，返回页面
-//	getGuestId := c.Query("user_id")
-//	id, _ := strconv.Atoi(getGuestId)
-//	GuestId := uint(id)
-//
-//	if GuestId == 0 || GuestId == HostId {
-//		//根据token-id查找用户
-//		getUser, err := service.GetUser(HostId)
-//		if err != nil {
-//			c.JSON(http.StatusOK, common.Response{
-//				Code: 1,
-//				Msg:  "Not find this person.",
-//			})
-//			c.Abort()
-//			return
-//		}
-//
-//		returnMyself := ReturnMyself{
-//			AuthorId:      getUser.ID,
-//			Name:          getUser.Name,
-//			FollowCount:   getUser.FollowCount,
-//			FollowerCount: getUser.FollowerCount,
-//		}
-//		//根据用户id查找 所有相关视频信息
-//		var videoList []model.Video
-//		videoList = service.GetVideoList(HostId)
-//		if len(videoList) == 0 {
-//			c.JSON(http.StatusOK, VideoListResponse{
-//				Response: common.Response{
-//					Code: 1,
-//					Msg:  "null",
-//				},
-//				VideoList: nil,
-//			})
-//		} else { //需要展示的列表信息
-//			var returnVideoList2 []ReturnVideo2
-//			for i := 0; i < len(videoList); i++ {
-//				returnVideo2 := ReturnVideo2{
-//					VideoId:       videoList[i].ID,
-//					Author:        returnMyself,
-//					PlayUrl:       videoList[i].PlayUrl,
-//					CoverUrl:      videoList[i].CoverUrl,
-//					FavoriteCount: videoList[i].FavoriteCount,
-//					CommentCount:  videoList[i].CommentCount,
-//					IsFavorite:    service.CheckFavorite(HostId, videoList[i].ID),
-//					Title:         videoList[i].Title,
-//				}
-//				returnVideoList2 = append(returnVideoList2, returnVideo2)
-//			}
-//			c.JSON(http.StatusOK, VideoListResponse2{
-//				Response: common.Response{
-//					Code: 0,
-//					Msg:  "success",
-//				},
-//				VideoList: returnVideoList2,
-//			})
-//		}
-//	} else {
-//		//根据传入id查找用户
-//		getUser, err := service.GetUser(GuestId)
-//		if err != nil {
-//			c.JSON(http.StatusOK, common.Response{
-//				Code: 1,
-//				Msg:  "Not find this person.",
-//			})
-//			c.Abort()
-//			return
-//		}
-//
-//		returnAuthor := ReturnAuthor{
-//			AuthorId:      getUser.ID,
-//			Name:          getUser.Name,
-//			FollowCount:   getUser.FollowCount,
-//			FollowerCount: getUser.FollowerCount,
-//			IsFollow:      service.IsFollowing(HostId, GuestId),
-//		}
-//		//根据用户id查找 所有相关视频信息
-//		var videoList []model.Video
-//		videoList = service.GetVideoList(GuestId)
-//		if len(videoList) == 0 {
-//			c.JSON(http.StatusOK, VideoListResponse{
-//				Response: common.Response{
-//					Code: 1,
-//					Msg:  "null",
-//				},
-//				VideoList: nil,
-//			})
-//		} else { //需要展示的列表信息
-//			var returnVideoList []ReturnVideo
-//			for i := 0; i < len(videoList); i++ {
-//				returnVideo := ReturnVideo{
-//					VideoId:       videoList[i].ID,
-//					Author:        returnAuthor,
-//					PlayUrl:       videoList[i].PlayUrl,
-//					CoverUrl:      videoList[i].CoverUrl,
-//					FavoriteCount: videoList[i].FavoriteCount,
-//					CommentCount:  videoList[i].CommentCount,
-//					IsFavorite:    service.CheckFavorite(HostId, videoList[i].ID),
-//					Title:         videoList[i].Title,
-//				}
-//				returnVideoList = append(returnVideoList, returnVideo)
-//			}
-//			c.JSON(http.StatusOK, VideoListResponse{
-//				Response: common.Response{
-//					Code: 0,
-//					Msg:  "success",
-//				},
-//				VideoList: returnVideoList,
-//			})
-//		}
-//	}
-//}
+// PublishList 个人创作列表
+func PublishList(c *gin.Context) {
+	//1.中间件鉴权token
+	getHostId, _ := c.Get("user_id")
+	var HostId uint
+	if v, ok := getHostId.(uint); ok {
+		HostId = v
+	}
+	//2.查询要查看用户的id的所有视频，返回页面
+	getGuestId := c.Query("user_id")
+	id, _ := strconv.Atoi(getGuestId)
+	GuestId := uint(id)
+
+	// 查询自己的创作列表
+	if GuestId == 0 || GuestId == HostId {
+		//根据token-id查找用户
+		getUser, err := service.GetUser(HostId)
+		if err != nil {
+			c.JSON(http.StatusOK, common.Response{
+				Code: 1,
+				Msg:  "Not find this person.",
+			})
+			c.Abort()
+			return
+		}
+
+		returnAuthor := ReturnAuthor{
+			AuthorId:      getUser.ID,
+			Name:          getUser.Name,
+			FollowCount:   getUser.FollowCount,
+			FollowerCount: getUser.FollowerCount,
+			IsFollow:      false, // 默认自己不关注自己
+		}
+		//根据用户id查找 所有相关视频信息
+		videoList := service.GetVideoList(HostId)
+		if len(videoList) == 0 {
+			c.JSON(http.StatusOK, VideoListResponse{
+				Response: common.Response{
+					Code: 1,
+					Msg:  "you have no video",
+				},
+				VideoList: nil,
+			})
+		} else {
+			var returnVideoList []ReturnVideo
+			for i := 0; i < len(videoList); i++ {
+				curReturnVideo := ReturnVideo{
+					VideoId:       videoList[i].ID,
+					Author:        returnAuthor,
+					PlayUrl:       videoList[i].PlayUrl,
+					CoverUrl:      videoList[i].CoverUrl,
+					FavoriteCount: videoList[i].FavoriteCount,
+					CommentCount:  videoList[i].CommentCount,
+					IsFavorite:    service.CheckFavorite(HostId, videoList[i].ID),
+					Title:         videoList[i].Title,
+				}
+				returnVideoList = append(returnVideoList, curReturnVideo)
+			}
+			c.JSON(http.StatusOK, VideoListResponse{
+				Response: common.Response{
+					Code: 0,
+					Msg:  "success",
+				},
+				VideoList: returnVideoList,
+			})
+		}
+	} else {
+		//根据传入id查找用户
+		getUser, err := service.GetUser(GuestId)
+		if err != nil {
+			c.JSON(http.StatusOK, common.Response{
+				Code: 1,
+				Msg:  "Not find this person.",
+			})
+			c.Abort()
+			return
+		}
+
+		returnAuthor := ReturnAuthor{
+			AuthorId:      getUser.ID,
+			Name:          getUser.Name,
+			FollowCount:   getUser.FollowCount,
+			FollowerCount: getUser.FollowerCount,
+			IsFollow:      service.IsFollowing(HostId, GuestId),
+		}
+		//根据用户id查找 所有相关视频信息
+		videoList := service.GetVideoList(GuestId)
+		if len(videoList) == 0 {
+			c.JSON(http.StatusOK, VideoListResponse{
+				Response: common.Response{
+					Code: 1,
+					Msg:  "the one have no video",
+				},
+				VideoList: nil,
+			})
+		} else { //需要展示的列表信息
+			var returnVideoList []ReturnVideo
+			for i := 0; i < len(videoList); i++ {
+				curReturnVideo := ReturnVideo{
+					VideoId:       videoList[i].ID,
+					Author:        returnAuthor,
+					PlayUrl:       videoList[i].PlayUrl,
+					CoverUrl:      videoList[i].CoverUrl,
+					FavoriteCount: videoList[i].FavoriteCount,
+					CommentCount:  videoList[i].CommentCount,
+					IsFavorite:    service.CheckFavorite(HostId, videoList[i].ID),
+					Title:         videoList[i].Title,
+				}
+				returnVideoList = append(returnVideoList, curReturnVideo)
+			}
+			c.JSON(http.StatusOK, VideoListResponse{
+				Response: common.Response{
+					Code: 0,
+					Msg:  "success",
+				},
+				VideoList: returnVideoList,
+			})
+		}
+	}
+}

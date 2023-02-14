@@ -28,7 +28,7 @@ func InitRouter() *gin.Engine {
 		publishGroup := douyinGroup.Group("/publish")
 		{
 			publishGroup.POST("/action/", middleware.JwtMiddleware(), controller.Publish)
-			//publishGroup.GET("/list/", middleware.JwtMiddleware(), controller.PublishList)
+			publishGroup.GET("/list/", middleware.JwtMiddleware(), controller.PublishList)
 
 		}
 
