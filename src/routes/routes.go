@@ -41,12 +41,12 @@ func InitRouter() *gin.Engine {
 			favoriteGroup.GET("/list/", middleware.JwtMiddleware(), controller.FavoriteList)
 		}
 
-		//// comment
-		//commentGroup := douyinGroup.Group("/comment")
-		//{
-		//	commentGroup.POST("/action/", middleware.JwtMiddleware(), controller.CommentAction)
-		//	commentGroup.GET("/list/", middleware.JwtMiddleware(), controller.CommentList)
-		//}
+		// comment
+		commentGroup := douyinGroup.Group("/comment")
+		{
+			commentGroup.POST("/action/", middleware.JwtMiddleware(), controller.CommentAction)
+			commentGroup.GET("/list/", middleware.JwtMiddleware(), controller.CommentList)
+		}
 		//
 		//// relation
 		//relationGroup := douyinGroup.Group("relation")
