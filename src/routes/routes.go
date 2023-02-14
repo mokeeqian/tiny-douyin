@@ -24,14 +24,14 @@ func InitRouter() *gin.Engine {
 			userGroup.POST("/register/", controller.UserRegister)
 		}
 
-		//// publish
-		//publishGroup := douyinGroup.Group("/publish")
-		//{
-		//	publishGroup.POST("/action/", middleware.JwtMiddleware(), controller.Publish)
-		//	publishGroup.GET("/list/", middleware.JwtMiddleware(), controller.PublishList)
-		//
-		//}
-		//
+		// publish
+		publishGroup := douyinGroup.Group("/publish")
+		{
+			publishGroup.POST("/action/", middleware.JwtMiddleware(), controller.Publish)
+			//publishGroup.GET("/list/", middleware.JwtMiddleware(), controller.PublishList)
+
+		}
+
 		// feed
 		douyinGroup.GET("/feed/", controller.Feed)
 		//
