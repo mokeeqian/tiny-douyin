@@ -79,9 +79,8 @@ func PostComment(c *gin.Context, userId uint, text string, videoId uint) {
 	}
 
 	//2 调用service层发布评论并改变评论数量，获取video作者信息
+	// 放入事务之中，作为原子操作
 	err1 := dao.SqlSession.Transaction(func(db *gorm.DB) error {
-
-		// FIXME: 这里其实有问题，应该放入事务之中
 		if err := service.PostComment(newComment); err != nil {
 			return err
 		}
@@ -117,7 +116,7 @@ func PostComment(c *gin.Context, userId uint, text string, videoId uint) {
 				Name:          getUser.Name,
 				FollowCount:   getUser.FollowCount,
 				FollowerCount: getUser.FollowerCount,
-				IsFollow:      service.IsFollowing(userId, videoAuthor),
+				IsFollow:      service.HasRelation(userId, videoAuthor),
 			},
 		},
 	})
@@ -127,6 +126,7 @@ func PostComment(c *gin.Context, userId uint, text string, videoId uint) {
 func DeleteComment(c *gin.Context, videoId uint, commentId uint) {
 
 	//1 调用service层删除评论并改变评论数量，获取video作者信息
+	// 放入事务之中
 	err := dao.SqlSession.Transaction(func(db *gorm.DB) error {
 		if err := service.DeleteCommentById(commentId); err != nil {
 			return err
@@ -198,7 +198,7 @@ func CommentList(c *gin.Context) {
 				Name:          getUser.Name,
 				FollowCount:   getUser.FollowCount,
 				FollowerCount: getUser.FollowerCount,
-				IsFollow:      service.IsFollowing(userId, commentList[i].ID),
+				IsFollow:      service.HasRelation(userId, commentList[i].ID),
 			},
 		}
 		responseCommentList = append(responseCommentList, responseComment)

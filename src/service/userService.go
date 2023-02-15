@@ -142,5 +142,5 @@ func CheckIsFollow(targetId string, userid uint) bool {
 		return false
 	}
 	//2.自己是否关注目标userId
-	return IsFollowing(uint(hostId), userid)
+	return HasRelation(uint(hostId), userid)
 }

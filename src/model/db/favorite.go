@@ -11,5 +11,5 @@ type Favorite struct {
 	gorm.Model
 	VideoId uint `json:"video_id"`
 	UserId  uint `json:"user_id"`
-	State   uint // 1- 点赞，2-取消点赞
+	State   uint // 0 无效， 1 有效
 }

@@ -228,7 +228,7 @@ func PublishList(c *gin.Context) {
 			Name:          getUser.Name,
 			FollowCount:   getUser.FollowCount,
 			FollowerCount: getUser.FollowerCount,
-			IsFollow:      service.IsFollowing(HostId, GuestId),
+			IsFollow:      service.HasRelation(HostId, GuestId),
 		}
 		//根据用户id查找 所有相关视频信息
 		videoList := service.GetVideoList(GuestId)

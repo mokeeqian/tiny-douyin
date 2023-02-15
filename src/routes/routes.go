@@ -49,13 +49,13 @@ func InitRouter() *gin.Engine {
 		}
 
 		// relation
-		//relationGroup := douyinGroup.Group("relation")
-		//{
-		//relationGroup.POST("/action/", middleware.JwtMiddleware(), controller.RelationAction)
-		//relationGroup.GET("/follow/list/", middleware.JwtMiddleware(), controller.FollowList)
-		//relationGroup.GET("/follower/list/", middleware.JwtMiddleware(), controller.FollowerList)
-		//relationGroup.GET("/friend/list", middleware.JwtMiddleware(), controller.FriendList)
-		//}
+		relationGroup := douyinGroup.Group("relation")
+		{
+			relationGroup.POST("/action/", middleware.JwtMiddleware(), controller.RelationAction)
+			//relationGroup.GET("/follow/list/", middleware.JwtMiddleware(), controller.FollowList)
+			//relationGroup.GET("/follower/list/", middleware.JwtMiddleware(), controller.FollowerList)
+			//relationGroup.GET("/friend/list", middleware.JwtMiddleware(), controller.FriendList)
+		}
 
 		// message
 		//messageGroup := douyinGroup.Group("message")

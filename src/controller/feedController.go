@@ -96,7 +96,7 @@ func Feed(c *gin.Context) {
 				if ok && time.Now().Unix() <= tokenStruct.ExpiresAt { //token合法
 					var uid1 = tokenStruct.UserId //用户id
 					var uid2 = x.AuthorId         //视频发布者id
-					if service.IsFollowing(uid1, uid2) {
+					if service.HasRelation(uid1, uid2) {
 						feedUser.IsFollow = true
 					}
 				}

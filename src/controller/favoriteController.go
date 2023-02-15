@@ -92,7 +92,7 @@ func FavoriteList(c *gin.Context) {
 			return
 		}
 		//isfollowing
-		isfollowing := service.IsFollowing(userIdHost, video.AuthorId) //参数类型、错误处理
+		isfollowing := service.HasRelation(userIdHost, video.AuthorId) //参数类型、错误处理
 		//isfavorite
 		isfavorite := service.CheckFavorite(userIdHost, video.ID)
 		//作者信息
