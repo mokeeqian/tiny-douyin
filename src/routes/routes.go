@@ -47,13 +47,21 @@ func InitRouter() *gin.Engine {
 			commentGroup.POST("/action/", middleware.JwtMiddleware(), controller.CommentAction)
 			commentGroup.GET("/list/", middleware.JwtMiddleware(), controller.CommentList)
 		}
-		//
-		//// relation
+
+		// relation
 		//relationGroup := douyinGroup.Group("relation")
 		//{
-		//	relationGroup.POST("/action/", middleware.JwtMiddleware(), controller.RelationAction)
-		//	relationGroup.GET("/follow/list/", middleware.JwtMiddleware(), controller.FollowList)
-		//	relationGroup.GET("/follower/list/", middleware.JwtMiddleware(), controller.FollowerList)
+		//relationGroup.POST("/action/", middleware.JwtMiddleware(), controller.RelationAction)
+		//relationGroup.GET("/follow/list/", middleware.JwtMiddleware(), controller.FollowList)
+		//relationGroup.GET("/follower/list/", middleware.JwtMiddleware(), controller.FollowerList)
+		//relationGroup.GET("/friend/list", middleware.JwtMiddleware(), controller.FriendList)
+		//}
+
+		// message
+		//messageGroup := douyinGroup.Group("message")
+		//{
+		//	messageGroup.GET("/chat/", middleware.JwtMiddleware(), controller.MessageRecord)
+		//	messageGroup.POST("/action/", middleware.JwtMiddleware(), controller.MessageSend)
 		//}
 	}
 
