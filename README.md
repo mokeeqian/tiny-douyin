@@ -32,5 +32,10 @@ A Simple Backend Service for Short Video Platform Implements by Golang
 
 ![img.png](resource/pic/arch.png)
 
+## TODO
+- 分库分表
+- 读写分离
+- 微服务化
+
 ## 鸣谢
 - 字节跳动青训营
