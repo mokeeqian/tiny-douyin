@@ -2,8 +2,6 @@
 A Simple Backend Service for Short Video Platform Implements by Golang
 
 ## 环境
-~~使用windows本地环境开发，基于所有sdk均基于wsl2 ubuntu18.04~~
-
 使用 Windows 环境进行开发（wsl的ip问题没能解决，关机后ip会变）
 
 ## 系统设计
@@ -32,6 +30,11 @@ A Simple Backend Service for Short Video Platform Implements by Golang
 
 ![img.png](resource/pic/arch.png)
 
+
+## 亮点设计
+- 预编译SQL，防止SQL注入
+- 
+
 ## Milestone
 
 | 功能项     | 进度  |
@@ -43,8 +46,6 @@ A Simple Backend Service for Short Video Platform Implements by Golang
 | 用户评论    | OK  |
 | 关系列表    | OK  |
 | 消息      |     |
-
-
 
 ## TODO
 - 热点数据缓存
