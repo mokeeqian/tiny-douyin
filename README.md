@@ -32,10 +32,26 @@ A Simple Backend Service for Short Video Platform Implements by Golang
 
 ![img.png](resource/pic/arch.png)
 
+## Milestone
+
+| 功能项     | 进度  |
+|---------|-----|
+| 视频Feed流 | OK  |
+| 视频投稿    | OK  |
+| 个人主页    | OK  |
+| 喜欢列表    | OK  |
+| 用户评论    | OK  |
+| 关系列表    | OK  |
+| 消息      |     |
+
+
+
 ## TODO
+- 热点数据缓存
 - 分库分表
 - 读写分离
 - 微服务化
+- 响应结构体解耦
 
 ## 鸣谢
 - 字节跳动青训营
