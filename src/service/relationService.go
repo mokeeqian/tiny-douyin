@@ -18,7 +18,7 @@ import (
 )
 
 const USER_TABLE_NAME = "users"
-const FOLLOW_TABLE_NAME = "follows"
+const FOLLOW_TABLE_NAME = "relations"
 
 // HasRelation fromId 是否关注 toId; toId 是否有 fromId 这个粉丝
 func HasRelation(fromId uint, toId uint) bool {
@@ -192,8 +192,8 @@ func FollowAction(fromId uint, toId uint, actionType uint) error {
 	return nil
 }
 
-// FollowingList 获取关注表
-func FollowingList(id uint) ([]db.User, error) {
+// FollowList 获取关注表
+func FollowList(id uint) ([]db.User, error) {
 	var userList []db.User
 
 	if err := dao.SqlSession.Model(&db.User{}).
@@ -210,8 +210,8 @@ func FollowerList(Id uint) ([]db.User, error) {
 	var userList []db.User
 
 	if err := dao.SqlSession.Model(&db.User{}).
-		Joins("left join "+FOLLOW_TABLE_NAME+" on "+USER_TABLE_NAME+".id = "+FOLLOW_TABLE_NAME+".to_user_id").
-		Where(FOLLOW_TABLE_NAME+".from_user_id=? AND "+FOLLOW_TABLE_NAME+".state = 1", Id).
+		Joins("left join "+FOLLOW_TABLE_NAME+" on "+USER_TABLE_NAME+".id = "+FOLLOW_TABLE_NAME+".from_user_id").
+		Where(FOLLOW_TABLE_NAME+".to_user_id=? AND "+FOLLOW_TABLE_NAME+".state = 1", Id).
 		Scan(&userList).Error; err != nil {
 		return userList, nil
 	}
