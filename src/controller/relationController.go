@@ -169,3 +169,10 @@ func FollowerList(c *gin.Context) {
 		})
 	}
 }
+
+// FriendList 好友列表
+// 注册登录后，点击消息页面，会立即请求该接口
+// 获取可聊天朋友列表，并且会带着和该用户的最新的一条消息
+func FriendList(c *gin.Context) {
+
+}
