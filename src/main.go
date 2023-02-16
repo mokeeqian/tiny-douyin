@@ -21,6 +21,12 @@ func main() {
 	//程序退出关闭数据库连接
 	defer dao.Close()
 
+	//连接redis
+	err2 := dao.InitRedis()
+	if err2 != nil {
+		panic(err2)
+	}
+
 	// 注册路由
 	r := routes.InitRouter()
 
