@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var Key = []byte("byte dance 11111 return")
+var Key = []byte("ssp预备队")
 
 type MyClaims struct {
 	UserId   uint   `json:"user_id"`
