@@ -6,6 +6,8 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+var RedisClient *redis.Client
+
 // InitRedis 初始化redis
 func InitRedis() error {
 	RedisClient := redis.NewClient(&redis.Options{

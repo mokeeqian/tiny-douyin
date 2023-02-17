@@ -6,15 +6,31 @@
 package routes
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/mokeeqian/tiny-douyin/src/controller"
 	"github.com/mokeeqian/tiny-douyin/src/middleware"
+	"github.com/ulule/limiter/v3"
+	mgin "github.com/ulule/limiter/v3/drivers/middleware/gin"
+	"github.com/ulule/limiter/v3/drivers/store/memory"
 )
 
 func InitRouter() *gin.Engine {
+	// Create a memory-based store with a rate limit of 1 request per 10 seconds per IP
+	rate := limiter.Rate{
+		Period: 10 * time.Second,
+		Limit:  1,
+	}
+	store := memory.NewStore()
+	limiter := limiter.New(store, rate)
+
+	// Create a Gin middleware using the limiter
+	limiterMiddleware := mgin.NewMiddleware(limiter)
 	r := gin.Default()
 	// 主路由组
 	douyinGroup := r.Group("/douyin")
+	douyinGroup.Use(limiterMiddleware)
 	{
 		// user
 		userGroup := douyinGroup.Group("/user")
@@ -54,7 +70,7 @@ func InitRouter() *gin.Engine {
 			relationGroup.POST("/action/", middleware.JwtMiddleware(), controller.RelationAction)
 			relationGroup.GET("/follow/list/", middleware.JwtMiddleware(), controller.FollowList)
 			relationGroup.GET("/follower/list/", middleware.JwtMiddleware(), controller.FollowerList)
-			relationGroup.GET("/friend/list", middleware.JwtMiddleware(), controller.FriendList)
+			//relationGroup.GET("/friend/list", middleware.JwtMiddleware(), controller.FriendList)
 		}
 
 		// message
