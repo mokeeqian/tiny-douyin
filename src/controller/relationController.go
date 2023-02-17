@@ -18,9 +18,21 @@ type RelationUser struct {
 	IsFollow      bool   `json:"is_follow"`
 }
 
+type FriendUser struct {
+	RelationUser
+	Avatar        string `json:"avatar"`   // 头像 url，暂时写死
+	LatestMessage string `json:"message"`  // 和该好友的最新聊天消息
+	MessageType   int64  `json:"msg_type"` // message消息的类型，0 => 当前请求用户接收的消息， 1 => 当前请求用户发送的消息
+}
+
 type RelationListResponse struct {
 	common.Response
 	UserList []RelationUser `json:"user_list"`
+}
+
+type FriendListResponse struct {
+	common.Response
+	FriendList []FriendUser `json:"user_list"`
 }
 
 // RelationAction 登录用户对其他用户进行关注或取消关注
@@ -174,5 +186,47 @@ func FollowerList(c *gin.Context) {
 // 注册登录后，点击消息页面，会立即请求该接口
 // 获取可聊天朋友列表，并且会带着和该用户的最新的一条消息
 func FriendList(c *gin.Context) {
+	// 取 token
+	token := c.Query("token")
+	tokenStruct, _ := middleware.CheckToken(token)
 
+	// from id
+	fromId := tokenStruct.UserId
+
+	tmpFriendList, err := service.FriendList(fromId)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, FriendListResponse{
+			Response: common.Response{
+				Code: 1,
+				Msg:  "查询朋友列表失败",
+			},
+			FriendList: nil,
+		})
+	} else {
+		// 对返回列表二次加工
+		var returnFriendList []FriendUser
+		for _, u := range tmpFriendList {
+			curFriend := FriendUser{
+				RelationUser: RelationUser{
+					Id:            u.ID,
+					Name:          u.Name,
+					FollowCount:   u.FollowCount,
+					FollowerCount: u.FollowerCount,
+					IsFollow:      service.HasRelation(fromId, u.ID),
+				},
+				Avatar:        "https://qian-1258498110.cos.ap-nanjing.myqcloud.com/R.jpg", // 暂时写死
+				LatestMessage: "你好，这是测试消息",
+				MessageType:   1, // 0 => 当前请求用户接收的消息， 1 => 当前请求用户发送的消息
+			}
+			returnFriendList = append(returnFriendList, curFriend)
+		}
+		c.JSON(http.StatusOK, FriendListResponse{
+			Response: common.Response{
+				Code: 0,
+				Msg:  "查询朋友列表成功",
+			},
+			FriendList: returnFriendList,
+		})
+	}
 }
