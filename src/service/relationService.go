@@ -219,10 +219,10 @@ func FollowerList(Id uint) ([]db.User, error) {
 }
 
 // FriendList 获取朋友列表（互相关注）
-// TODO: 这里可用 Redis 优化
 func FriendList(Id uint) ([]db.User, error) {
 	var friendList []db.User
 
+	// TODO: 这里可用 Redis 优化
 	// 查询 Id 的关注列表
 	// 检查 关注列表中的用户是否也关注 Id
 	followList, err := FollowList(Id)
@@ -237,9 +237,3 @@ func FriendList(Id uint) ([]db.User, error) {
 		return friendList, nil
 	}
 }
-
-// GetLatestMessage 获取 from 与 to 之间 最近的一条消息内容（方向不限）
-//func GetLatestMessage(fromId uint, toId uint) (db.Message, error) {
-//	var msg db.Message
-//
-//}

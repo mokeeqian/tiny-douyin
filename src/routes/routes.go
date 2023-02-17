@@ -45,12 +45,12 @@ func InitRouter() *gin.Engine {
 		{
 			publishGroup.POST("/action/", middleware.JwtMiddleware(), controller.Publish)
 			publishGroup.GET("/list/", middleware.JwtMiddleware(), controller.PublishList)
-
 		}
 
 		// feed
 		douyinGroup.GET("/feed/", controller.Feed)
 
+		// favorite
 		favoriteGroup := douyinGroup.Group("favorite")
 		{
 			favoriteGroup.POST("/action/", middleware.JwtMiddleware(), controller.Favorite)
@@ -74,12 +74,11 @@ func InitRouter() *gin.Engine {
 		}
 
 		// message
-		//messageGroup := douyinGroup.Group("message")
-		//{
-		//	messageGroup.GET("/chat/", middleware.JwtMiddleware(), controller.MessageRecord)
-		//	messageGroup.POST("/action/", middleware.JwtMiddleware(), controller.MessageSend)
-		//}
+		messageGroup := douyinGroup.Group("message")
+		{
+			messageGroup.GET("/chat/", middleware.JwtMiddleware(), controller.MessageChat)
+			messageGroup.POST("/action/", middleware.JwtMiddleware(), controller.MessageAction)
+		}
 	}
-
 	return r
 }

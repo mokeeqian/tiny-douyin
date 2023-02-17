@@ -35,7 +35,7 @@ func main() {
 	dao.SqlSession.AutoMigrate(&db.Comment{})
 	dao.SqlSession.AutoMigrate(&db.Favorite{})
 	dao.SqlSession.AutoMigrate(&db.Relation{})
-	dao.SqlSession.AutoMigrate(&db.Chat{})
+	//dao.SqlSession.AutoMigrate(&db.Chat{})
 	dao.SqlSession.AutoMigrate(&db.Message{})
 
 	errRun := r.Run(":12138")

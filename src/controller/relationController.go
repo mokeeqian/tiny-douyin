@@ -207,6 +207,28 @@ func FriendList(c *gin.Context) {
 		// 对返回列表二次加工
 		var returnFriendList []FriendUser
 		for _, u := range tmpFriendList {
+			var msg string
+			var msgType int64
+			latestMsg1, msgType1, err1 := service.GetLatestMessage(fromId, u.ID)
+			latestMsg2, msgType2, err2 := service.GetLatestMessage(u.ID, fromId)
+			if err1 != nil && err2 != nil {
+				msg = ""
+				msgType = -1
+			} else if err1 != nil {
+				msg = latestMsg2.Content
+				msgType = msgType2
+			} else if err2 != nil {
+				msg = latestMsg1.Content
+				msgType = msgType1
+			} else {
+				if latestMsg1.CreateTime.After(latestMsg2.CreateTime) {
+					msg = latestMsg1.Content
+					msgType = msgType1
+				} else {
+					msg = latestMsg2.Content
+					msgType = msgType2
+				}
+			}
 			curFriend := FriendUser{
 				RelationUser: RelationUser{
 					Id:            u.ID,
@@ -215,9 +237,10 @@ func FriendList(c *gin.Context) {
 					FollowerCount: u.FollowerCount,
 					IsFollow:      service.HasRelation(fromId, u.ID),
 				},
-				Avatar:        "https://qian-1258498110.cos.ap-nanjing.myqcloud.com/R.jpg", // 暂时写死
-				LatestMessage: "你好，这是测试消息",
-				MessageType:   1, // 0 => 当前请求用户接收的消息， 1 => 当前请求用户发送的消息
+				Avatar: "https://qian-1258498110.cos.ap-nanjing.myqcloud.com/R.jpg", // 暂时写死
+				// TODO: 优化最近一条消息查询
+				LatestMessage: msg,
+				MessageType:   msgType, // 0 => 当前请求用户接收的消息， 1 => 当前请求用户发送的消息
 			}
 			returnFriendList = append(returnFriendList, curFriend)
 		}
@@ -229,4 +252,9 @@ func FriendList(c *gin.Context) {
 			FriendList: returnFriendList,
 		})
 	}
+}
+
+// CommonFollowList 共同关注
+func CommonFollowList(c *gin.Context) {
+
 }
