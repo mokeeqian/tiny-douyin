@@ -15,3 +15,14 @@ func GetLatestMessage(fromId uint, toId uint) (db.Message, int64, error) {
 		return fromTo[0], 1, nil
 	}
 }
+
+// 获得所有内容
+func GetAllMessage(fromId uint, toId uint) ([]db.Message, error) {
+	var fromTo []db.Message // from 发给 to
+	err := dao.SqlSession.Table("messages").Where("from_user_id = ? AND to_user_id = ?", fromId, toId).Find(&fromTo).Error
+	if err != nil || len(fromTo) == 0 {
+		return nil, err
+	} else {
+		return fromTo, nil
+	}
+}

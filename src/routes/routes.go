@@ -20,7 +20,7 @@ func InitRouter() *gin.Engine {
 	// Create a memory-based store with a rate limit of 1 request per 10 seconds per IP
 	rate := limiter.Rate{
 		Period: 10 * time.Second,
-		Limit:  1,
+		Limit:  5,
 	}
 	store := memory.NewStore()
 	limiter := limiter.New(store, rate)
