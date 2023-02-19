@@ -2,17 +2,19 @@ package controller
 
 import (
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"github.com/mokeeqian/tiny-douyin/src/common"
 	"github.com/mokeeqian/tiny-douyin/src/model/db"
 	"github.com/mokeeqian/tiny-douyin/src/service"
-	logging "github.com/sirupsen/logrus"
+
+	// logging "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
+	// "strings"
 )
 
 // ReturnAuthor 视频作者结构封装
@@ -105,38 +107,38 @@ func Publish(c *gin.Context) {
 
 	fmt.Println(playUrl)
 
-	coverName := strings.Replace(finalName, ".mp4", ".jpeg", 1)
+	// coverName := strings.Replace(finalName, ".mp4", ".jpeg", 1)
 
-	//获取第3帧封面
-	img := service.GenerateVideoCover(saveFile, 3)
+	// //获取第3帧封面
+	// img := service.GenerateVideoCover(saveFile, 3)
 
-	//img, _ := jpeg.Decode(buf)//保存到本地时要用到
-	//imgw, _ := os.Create(saveImage) //先创建，后写入
-	//jpeg.Encode(imgw, img, &jpeg.Options{100})
+	// //img, _ := jpeg.Decode(buf)//保存到本地时要用到
+	// //imgw, _ := os.Create(saveImage) //先创建，后写入
+	// //jpeg.Encode(imgw, img, &jpeg.Options{100})
 
-	// 使用腾讯云,
-	//直接传至云端
-	coverUrl, err := service.CosUpload(coverName, img)
-	if err != nil {
-		c.JSON(http.StatusOK, common.Response{
-			Code: 1,
-			Msg:  err.Error(),
-		})
-		return
-	}
+	// // 使用腾讯云,
+	// //直接传至云端
+	// coverUrl, err := service.CosUpload(coverName, img)
+	// if err != nil {
+	// 	c.JSON(http.StatusOK, common.Response{
+	// 		Code: 1,
+	// 		Msg:  err.Error(),
+	// 	})
+	// 	return
+	// }
 
-	//删除保存在本地中的视频
-	err = os.Remove(saveFile) // ignore_security_alert
-	if err != nil {
-		logging.Info(err)
-	}
+	// //删除保存在本地中的视频
+	// err = os.Remove(saveFile) // ignore_security_alert
+	// if err != nil {
+	// 	logging.Info(err)
+	// }
 
 	//4.保存发布信息至数据库,刚开始发布，喜爱和评论默认为0
 	video := db.Video{
 		Model:         gorm.Model{},
 		AuthorId:      userId,
 		PlayUrl:       playUrl,
-		CoverUrl:      coverUrl,
+		CoverUrl:      "123",
 		FavoriteCount: 0,
 		CommentCount:  0,
 		Title:         title,

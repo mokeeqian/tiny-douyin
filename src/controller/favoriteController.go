@@ -1,12 +1,17 @@
 package controller
 
 import (
+	"context"
+	"fmt"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"github.com/mokeeqian/tiny-douyin/src/common"
 	"github.com/mokeeqian/tiny-douyin/src/model/db"
 	"github.com/mokeeqian/tiny-douyin/src/service"
-	"net/http"
-	"strconv"
 )
 
 type FavoriteAuthor struct { //从user中获取,getUser函数
@@ -34,26 +39,63 @@ type FavoriteListResponse struct {
 }
 
 func Favorite(c *gin.Context) {
+	// redis client
+	RedisClient := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
 	//user_id获取
 	getUserId, _ := c.Get("user_id")
 	var userId uint
 	if v, ok := getUserId.(uint); ok {
 		userId = v
 	}
+	// RedisClient *redis.Client
 	//参数解析
 	actionTypeStr := c.Query("action_type") // 1-点赞，2-取消点赞
 	actionType, _ := strconv.ParseUint(actionTypeStr, 10, 10)
 	videoIdStr := c.Query("video_id")
 	videoId, _ := strconv.ParseUint(videoIdStr, 10, 10)
-
+	fmt.Println(actionType)
+	fmt.Println(videoIdStr)
+	// 判断点赞缓存
+	cacheKey := fmt.Sprintf("video:%d:user:%d", videoId, userId)
+	exists, err := RedisClient.Exists(context.Background(), cacheKey).Result()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, common.Response{
+			Code: 1,
+			Msg:  err.Error(),
+		})
+		return
+	}
+	if exists == 1 {
+		c.JSON(http.StatusBadRequest, common.Response{
+			Code: 1,
+			Msg:  "您已经点赞过该视频了！",
+		})
+		return
+	}
 	//函数调用及响应
-	err := service.FavoriteAction(userId, uint(videoId), uint(actionType))
+	err = service.FavoriteAction(userId, uint(videoId), uint(actionType))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, common.Response{
 			Code: 1,
 			Msg:  err.Error(),
 		})
 	} else {
+		// 缓存点赞信息
+		if actionType == 1 {
+			err = RedisClient.Set(context.Background(), cacheKey, 1, 24*time.Hour).Err()
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, common.Response{
+					Code: 1,
+					Msg:  err.Error(),
+				})
+				return
+			}
+		}
+
 		c.JSON(http.StatusOK, common.Response{
 			Code: 0,
 			Msg:  "点赞成功！",
