@@ -31,9 +31,9 @@ A Simple Backend Service for Short Video Platform Implements by Golang
 ![img.png](resource/pic/arch.png)
 
 
-## 亮点设计
+## 项目特性
 - 预编译SQL，防止SQL注入
-- 
+- Redis 缓存热点数据
 
 ## Milestone
 
@@ -45,12 +45,13 @@ A Simple Backend Service for Short Video Platform Implements by Golang
 | 喜欢列表    | OK  |
 | 用户评论    | OK  |
 | 关系列表    | OK  |
-| 消息      |     |
+| 消息      | OK  |
 
 ## TODO
 - 热点数据缓存
-- 分库分表
-- 读写分离
+- 分库分表、读写分离
+- MQ 异步处理点赞、关注、评论
+- 接口限流熔断降级
 - 微服务化
 - 响应结构体解耦
 
