@@ -15,3 +15,18 @@ func GetLatestMessage(fromId uint, toId uint) (db.Message, int64, error) {
 		return fromTo[0], 1, nil
 	}
 }
+
+// GetLatestMessageAfter 获取 from 和 to 之间 在 preMsgTime之后的最近消息
+func GetLatestMessageAfter(fromId uint, toId uint, preMsgTime int64) ([]db.Message, error) {
+	var msgList []db.Message
+	err := dao.SqlSession.Table("messages").Where("(from_user_id = ? AND to_user_id = ? ) OR (from_user_id = ? AND to_user_id = ?)", fromId, toId, toId, fromId).Order("create_time asc").Where("create_time > ?", preMsgTime).Find(&msgList).Error
+
+	return msgList, err
+}
+
+func AddMessage(message db.Message) error {
+	if err := dao.SqlSession.Table("messages").Create(&message).Error; err != nil {
+		return err
+	}
+	return nil
+}
