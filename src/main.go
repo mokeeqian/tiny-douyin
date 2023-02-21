@@ -17,15 +17,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 	//程序退出关闭数据库连接
-	defer dao.Close()
+	defer dao.CloseMysql()
 
 	//连接redis
 	err2 := dao.InitRedis()
 	if err2 != nil {
 		panic(err2)
 	}
+	defer dao.CloseRedis()
 
 	// 注册路由
 	r := routes.InitRouter()

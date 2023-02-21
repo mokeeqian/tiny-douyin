@@ -1,5 +1,12 @@
-url: 127.0.0.1
-username: root
-password: 990505
-db: douyin
-port: 3306
+mysql:
+  url: 127.0.0.1
+  username: root
+  password: 990505
+  db: douyin
+  port: 3306
+
+redis:
+  url: 127.0.0.1
+  port: 6379
+  password: ""
+  db: 0
