@@ -8,7 +8,10 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/mokeeqian/tiny-douyin/src/controller"
+	_ "github.com/mokeeqian/tiny-douyin/src/docs" // 这里需要引入本地已生成文档
 	"github.com/mokeeqian/tiny-douyin/src/middleware"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func InitRouter() *gin.Engine {
@@ -63,6 +66,11 @@ func InitRouter() *gin.Engine {
 			messageGroup.GET("/chat/", middleware.JwtMiddleware(), controller.MessageChat)
 			messageGroup.POST("/action/", middleware.JwtMiddleware(), controller.MessageAction)
 		}
+	}
+
+	apiGroup := r.Group("/api")
+	{
+		apiGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 	return r
 }

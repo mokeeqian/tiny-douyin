@@ -11,6 +11,11 @@ import (
 	"github.com/mokeeqian/tiny-douyin/src/routes"
 )
 
+// @title Tiny-Douyin API
+// @version 0.0.1
+// @description 短视频社交平台服务端
+// @name ssp预备队
+// @BasePath /api/v1
 func main() {
 	//连接数据库
 	err := dao.InitMySql()
