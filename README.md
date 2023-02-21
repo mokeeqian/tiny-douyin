@@ -8,7 +8,7 @@ A Simple Backend Service for Short Video Platform Implements by Golang
 ### 需求分析
 ![img.png](resource/pic/img.png)
 ### 数据库设计
-![img.png](resource/pic/db_design.png)
+![img.png](resource/pic/db_design.jpg)
 
 **NOTE: 在高并发场景下，取消DB层面的外键约束，由应用层实现**
 

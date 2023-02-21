@@ -9,7 +9,7 @@ import "github.com/jinzhu/gorm"
 
 type Comment struct {
 	gorm.Model
-	VideoId uint   `json:"video_id"`
-	UserId  uint   `json:"user_id"`
+	VideoId uint   `json:"video_id" gorm:"index"`
+	UserId  uint   `json:"user_id" gorm:"index"`
 	Content string `json:"content"`
 }
