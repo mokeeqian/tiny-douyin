@@ -7,6 +7,7 @@ import (
 	"github.com/mokeeqian/tiny-douyin/src/dao"
 	"github.com/mokeeqian/tiny-douyin/src/model/db"
 	"github.com/mokeeqian/tiny-douyin/src/service"
+	"github.com/mokeeqian/tiny-douyin/src/util"
 	"net/http"
 	"strconv"
 )
@@ -61,6 +62,9 @@ func CommentAction(c *gin.Context) {
 	//2.2 合法操作类型
 	if actionType == "1" { // 发布评论
 		text := c.Query("comment_text")
+		// 敏感词过滤
+		text = util.Filter.Replace(text, '*')
+
 		PostComment(c, userId, text, uint(videoId))
 	} else if actionType == "2" { //删除评论
 		commentIdStr := c.Query("comment_id")
