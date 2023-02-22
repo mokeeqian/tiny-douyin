@@ -27,12 +27,7 @@ func main() {
 	defer dao.CloseMysql()
 
 	//连接redis
-	//err2 := dao.InitRedis()
 	dao.InitRedis()
-	//if err2 != nil {
-	//	panic(err2)
-	//}
-	//defer dao.CloseRedis()
 
 	util.InitFilter()
 
