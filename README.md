@@ -34,6 +34,8 @@ A Simple Backend Service for Short Video Platform Implements by Golang
 ## 项目特性
 - 预编译SQL，防止SQL注入
 - Redis 缓存热点数据
+- 敏感词过滤
+- Redis List 作为MQ异步更新MySQL
 
 ## Milestone
 
