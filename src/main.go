@@ -9,6 +9,8 @@ import (
 	"github.com/mokeeqian/tiny-douyin/src/dao"
 	"github.com/mokeeqian/tiny-douyin/src/model/db"
 	"github.com/mokeeqian/tiny-douyin/src/routes"
+	"github.com/mokeeqian/tiny-douyin/src/task"
+	"github.com/mokeeqian/tiny-douyin/src/util"
 )
 
 // @title Tiny-Douyin API
@@ -26,14 +28,15 @@ func main() {
 	defer dao.CloseMysql()
 
 	//连接redis
-	err2 := dao.InitRedis()
-	if err2 != nil {
-		panic(err2)
-	}
-	defer dao.CloseRedis()
+	dao.InitRedis()
+
+	util.InitFilter()
 
 	// 注册路由
 	r := routes.InitRouter()
+
+	// 开启定时任务
+	task.CronTaskSetUp()
 
 	dao.SqlSession.AutoMigrate(&db.User{})
 	dao.SqlSession.AutoMigrate(&db.Video{})

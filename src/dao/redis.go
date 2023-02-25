@@ -6,31 +6,41 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-// RedisClient Redis 连接
+var Ctx = context.Background()
+
 var RedisClient *redis.Client
 
+//var RedisUserRelationClient *redis.Client
+//var RedisFavoriteClient *redis.Client
+//var RedisCommentClient *redis.Client
+
 // InitRedis 初始化redis
-func InitRedis() error {
+func InitRedis() {
 	conf := GetConfig().Redis
+	addr := fmt.Sprintf("%s:%s", conf.Url, conf.Port)
 
 	RedisClient = redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", conf.Url, conf.Port),
+		Addr:     addr,
 		Password: conf.Password,
 		DB:       conf.Db,
 	})
 
-	_, err := RedisClient.Ping(context.Background()).Result()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// CloseRedis 关闭redis连接
-func CloseRedis() {
-	err := RedisClient.Close()
-	if err != nil {
-		return
-	}
+	// 使用多个db，会导致数据一致性问题
+	//RedisUserRelationClient = redis.NewClient(&redis.Options{
+	//	Addr:     addr,
+	//	Password: conf.Password,
+	//	DB:       1,
+	//})
+	//
+	//RedisFavoriteClient = redis.NewClient(&redis.Options{
+	//	Addr:     addr,
+	//	Password: conf.Password,
+	//	DB:       2,
+	//})
+	//
+	//RedisCommentClient = redis.NewClient(&redis.Options{
+	//	Addr:     addr,
+	//	Password: conf.Password,
+	//	DB:       3,
+	//})
 }

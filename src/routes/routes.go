@@ -19,6 +19,8 @@ func InitRouter() *gin.Engine {
 	// 主路由组
 	douyinGroup := r.Group("/douyin")
 	{
+		douyinGroup.GET("/", controller.Welcome)
+
 		// user
 		userGroup := douyinGroup.Group("/user")
 		{
