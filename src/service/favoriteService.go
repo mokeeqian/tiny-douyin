@@ -9,6 +9,10 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/mokeeqian/tiny-douyin/src/dao"
 	"github.com/mokeeqian/tiny-douyin/src/model/db"
+	"github.com/mokeeqian/tiny-douyin/src/util"
+	logging "github.com/sirupsen/logrus"
+	"strconv"
+	"time"
 )
 
 // CheckFavorite 查询某用户是否点赞某视频
@@ -25,119 +29,191 @@ func CheckFavorite(uid uint, vid uint) bool {
 	return true
 }
 
-// AddFavoriteCount 增加favorite_count
-func AddFavoriteCount(HostId uint) error {
-	if err := dao.SqlSession.Model(&db.User{}).
-		Where("id=?", HostId).
-		Update("favorite_count", gorm.Expr("favorite_count+?", 1)).Error; err != nil {
-		return err
+func InsertFavorite(userId uint, videoId uint) {
+	var existsLike db.Favorite
+	result := dao.SqlSession.Where(map[string]interface{}{"user_id": userId, "video_id": videoId}).First(&existsLike)
+	aLike := db.Favorite{
+		UserId:  userId,
+		VideoId: videoId,
+		State:   1,
 	}
-	return nil
+	// 点赞记录不存在，则插入
+	if result.Error == gorm.ErrRecordNotFound {
+		dao.SqlSession.Select("user_id", "video_id", "state", "created_at").Create(&aLike)
+	} else {
+		//点赞记录存在，则更新
+		UpdateFavorite(userId, videoId, 1)
+	}
 }
 
-// ReduceFavoriteCount 减少favorite_count
-func ReduceFavoriteCount(HostId uint) error {
-	if err := dao.SqlSession.Model(&db.User{}).
-		Where("id=?", HostId).
-		Update("favorite_count", gorm.Expr("favorite_count-?", 1)).Error; err != nil {
-		return err
-	}
-	return nil
+func UpdateFavorite(userId uint, videoId uint, state int) {
+	dao.SqlSession.Model(db.Favorite{}).Where(map[string]interface{}{"user_id": userId, "video_id": videoId}).Updates(map[string]interface{}{
+		"state": state,
+	})
 }
 
 // FavoriteAction 点赞操作
+// 采用redis缓存用户点赞列表、视频点赞数目。Redis消息队列+定时任务更新点赞/取消点赞，定时任务 异步落库点赞数目（一致性要求并不是很高）
+// FIXME: 这里数据会有不一致的问题
 func FavoriteAction(userId uint, videoId uint, actionType uint) (err error) {
+	strUserId := strconv.Itoa(int(userId))
+	strVideoId := strconv.Itoa(int(videoId))
+	userFavoriteVideoKey := util.KeyUserFavoriteVideo(userId)
+	//videoFavoriteByUserKey := util.KeyVideoFavoriteByUser(videoId)
+	videoFavoriteCountKey := util.KeyVideoFavoriteCount(videoId)
+
 	//1-点赞
 	if actionType == 1 {
-		favoriteAction := db.Favorite{
-			UserId:  userId,
-			VideoId: videoId,
-			State:   1, //1-已点赞
-		}
-		var favoriteExist = &db.Favorite{} //找不到时会返回错误
-		//如果没有记录-Create，如果有了记录-修改State
-		result := dao.SqlSession.Table("favorites").Where("user_id = ? AND video_id = ?", userId, videoId).First(&favoriteExist)
-		if result.Error != nil { //不存在
-			if err := dao.SqlSession.Table("favorites").Create(&favoriteAction).Error; err != nil { //创建记录
+
+		// 查询Redis中是否已缓存过该用户的点赞列表
+		// 1、已缓存
+		if n, err := dao.RedisClient.Exists(dao.Ctx, userFavoriteVideoKey).Result(); n > 0 {
+			if err != nil {
+				logging.Errorf("方法FavoriteAction执行失败 %v", err)
 				return err
 			}
-			dao.SqlSession.Table("videos").Where("id = ?", videoId).Update("favorite_count", gorm.Expr("favorite_count + 1"))
-			//userId的favorite_count增加
-			if err := AddFavoriteCount(userId); err != nil {
-				return err
+			if _, err1 := dao.RedisClient.SAdd(dao.Ctx, userFavoriteVideoKey, videoId).Result(); err != nil {
+				logging.Errorf("方法FavoriteAction执行失败 %v", err)
+				return err1
+			} else {
+				// 将点赞/取消点赞 缓存 在redis中，以"strUserId:videoId的形式存储"，按照 时间顺序，定期更新回数据库
+				// TODO: 使用 RocketMQ 重构
+				dao.RedisClient.LPush(dao.Ctx, "likeAdd", strUserId+":"+strVideoId)
 			}
-			//videoId对应的userId的total_favorite增加
-			//GuestId, err := GetVideoAuthor(videoId)
-			//if err != nil {
-			//	return err
-			//}
-			//if err := AddTotalFavorited(GuestId); err != nil {
-			//	return err
-			//}
-		} else { //存在
-			if favoriteExist.State == 0 { //state为0-video的favorite_count加1
-				dao.SqlSession.Table("videos").Where("id = ?", videoId).Update("favorite_count", gorm.Expr("favorite_count + 1"))
-				dao.SqlSession.Table("favorites").Where("video_id = ?", videoId).Update("state", 1)
-				//userId的favorite_count增加
-				if err := AddFavoriteCount(userId); err != nil {
+		} else {
+			//2 未缓存
+			// 从数据库拉取用户的点赞列表,并缓存到redis中
+			videoList, _ := FavoriteList(userId)
+			for _, video := range videoList {
+				if _, err := dao.RedisClient.SAdd(dao.Ctx, userFavoriteVideoKey, video.ID).Result(); err != nil {
+					logging.Errorf("方法：favoriteAction执行失败 %v", err)
+					// 防止脏读，直接删除缓存
+					dao.RedisClient.Del(dao.Ctx, userFavoriteVideoKey)
 					return err
 				}
-				//videoId对应的userId的total_favorite增加
-				//GuestId, err := GetVideoAuthor(videoId)
-				//if err != nil {
-				//	return err
-				//}
-				//if err := AddTotalFavorited(GuestId); err != nil {
-				//	return err
-				//}
 			}
-			//state为1-video的favorite_count不变
-			return nil
+
+			if _, err := dao.RedisClient.Expire(dao.Ctx, userFavoriteVideoKey, time.Minute*5).Result(); err != nil {
+				logging.Errorf("方法favoriteAction：设置过期时间失败%v", err)
+				dao.RedisClient.Del(dao.Ctx, userFavoriteVideoKey)
+				return err
+			}
+			// 当前视频的点赞信息放入redis
+			if _, err := dao.RedisClient.SAdd(dao.Ctx, userFavoriteVideoKey, videoId).Result(); err != nil {
+				logging.Errorf("方法：favoriteAction执行失败 %v", err)
+				dao.RedisClient.Del(dao.Ctx, userFavoriteVideoKey)
+				return err
+			} else {
+				dao.RedisClient.LPush(dao.Ctx, "likeAdd", strUserId+":"+strVideoId)
+			}
+		}
+
+		// 查询当前video的点赞数目是否已缓存
+		// 1、已缓存
+		if n, err := dao.RedisClient.Exists(dao.Ctx, videoFavoriteCountKey).Result(); n > 0 {
+			if err != nil {
+				logging.Errorf("方法：favoriteAction: 缓存查询video点赞数目执行失败 %v", err)
+				return err
+			}
+			if _, err := dao.RedisClient.Incr(dao.Ctx, videoFavoriteCountKey).Result(); err != nil {
+				logging.Errorf("方法favoriteAction: video点赞数目+1执行失败 %v", err)
+				return err
+			}
+		} else {
+			//2、未缓存
+			count := GetFavoriteCount(videoId)
+			if _, err := dao.RedisClient.Set(dao.Ctx, videoFavoriteCountKey, count, 0).Result(); err != nil {
+				logging.Errorf("方法favoriteAction:video点赞数目插入执行失败 %v", err)
+				// 防止脏读
+				dao.RedisClient.Del(dao.Ctx, videoFavoriteCountKey)
+				return err
+			}
+
+			//if _, err := dao.RedisClient.Expire(dao.Ctx, videoFavoriteCountKey, time.Minute*5).Result(); err != nil {
+			//	logging.Errorf("方法favoriteAction：设置过期时间失败%v", err)
+			//	dao.RedisClient.Del(dao.Ctx, videoFavoriteCountKey)
+			//	return err
+			//}
+			if _, err := dao.RedisClient.Incr(dao.Ctx, videoFavoriteCountKey).Result(); err != nil {
+				logging.Errorf("方法favoriteAction:video点赞数目+1执行失败 %v", err)
+				// 防止脏读
+				dao.RedisClient.Del(dao.Ctx, videoFavoriteCountKey)
+				return err
+			}
 		}
 
 	} else { //2-取消点赞
-		var favoriteCancel = &db.Favorite{}
-		favoriteActionCancel := db.Favorite{
-			UserId:  userId,
-			VideoId: videoId,
-			State:   0, //0-未点赞
-		}
-		if err := dao.SqlSession.Table("favorites").Where("user_id = ? AND video_id = ?", userId, videoId).First(&favoriteCancel).Error; err != nil { //找不到这条记录，取消点赞失败，创建记录
-			dao.SqlSession.Table("favorites").Create(&favoriteActionCancel)
-			//userId的favorite_count增加
-			if err := ReduceFavoriteCount(userId); err != nil {
+
+		//存在用户
+		if n, err := dao.RedisClient.Exists(dao.Ctx, userFavoriteVideoKey).Result(); n > 0 {
+			if err != nil {
+				logging.Errorf("方法favoriteAction:缓存查询用户ID执行失败 %v", err)
 				return err
 			}
-			//videoId对应的userId的total_favorite增加
-			//GuestId, err := GetVideoAuthor(videoId)
-			//if err != nil {
-			//	return err
-			//}
-			//if err := ReduceTotalFavorited(GuestId); err != nil {
-			//	return err
-			//}
-			return err
-		}
-		//存在
-		if favoriteCancel.State == 1 { //state为1-video的favorite_count减1
-			dao.SqlSession.Table("videos").Where("id = ?", videoId).Update("favorite_count", gorm.Expr("favorite_count - 1"))
-			//更新State
-			dao.SqlSession.Table("favorites").Where("video_id = ?", videoId).Update("state", 0)
-			if err := ReduceFavoriteCount(userId); err != nil {
+			if _, err1 := dao.RedisClient.SRem(dao.Ctx, userFavoriteVideoKey, videoId).Result(); err1 != nil {
+				logging.Errorf("方法favoriteAction:缓存取消点赞执行失败 %v", err)
+				return err1
+			} else {
+				dao.RedisClient.LPush(dao.Ctx, "likeDel", strUserId+":"+strVideoId)
+			}
+		} else { //不存在
+			// 从数据库拉取最新的点赞列表,并缓存到数据库中
+			videoList, _ := FavoriteList(userId)
+			for _, value := range videoList {
+				if _, err := dao.RedisClient.SAdd(dao.Ctx, userFavoriteVideoKey, value.ID).Result(); err != nil {
+					logging.Errorf("方法：favoriteAction取消点赞执行失败 %v", err)
+					// 防止脏读
+					dao.RedisClient.Del(dao.Ctx, userFavoriteVideoKey)
+					return err
+				}
+			}
+			if _, err := dao.RedisClient.Expire(dao.Ctx, userFavoriteVideoKey, time.Minute*5).Result(); err != nil {
+				logging.Errorf("方法favoriteAction：设置过期时间失败%v", err)
+				dao.RedisClient.Del(dao.Ctx, userFavoriteVideoKey)
 				return err
 			}
-			//videoId对应的userId的total_favorite增加
-			//GuestId, err := GetVideoAuthor(videoId)
-			//if err != nil {
-			//	return err
-			//}
-			//if err := ReduceTotalFavorited(GuestId); err != nil {
-			//	return err
-			//}
-			return err
+			// 当前视频取消点赞
+			if _, err := dao.RedisClient.SRem(dao.Ctx, userFavoriteVideoKey, videoId).Result(); err != nil {
+				logging.Errorf("方法：favoriteAction缓存取消点赞执行失败 %v", err)
+				return err
+			} else {
+				dao.RedisClient.LPush(dao.Ctx, "likeDel", strUserId+":"+strVideoId)
+			}
 		}
-		//state为0-video的favorite_count不变
-		return nil
+
+		// 查询当前video的点赞数目是否已缓存
+		// 1、已缓存
+		if n, err := dao.RedisClient.Exists(dao.Ctx, videoFavoriteCountKey).Result(); n > 0 {
+			if err != nil {
+				logging.Errorf("方法：favoriteAction: 缓存查询video点赞数目执行失败 %v", err)
+				return err
+			}
+			if _, err := dao.RedisClient.Decr(dao.Ctx, videoFavoriteCountKey).Result(); err != nil {
+				logging.Errorf("方法favoriteAction: video点赞数目+1执行失败 %v", err)
+				return err
+			}
+		} else {
+			//2、未缓存
+			count := GetFavoriteCount(videoId)
+			if _, err := dao.RedisClient.Set(dao.Ctx, videoFavoriteCountKey, count, 0).Result(); err != nil {
+				logging.Errorf("方法favoriteAction:video点赞数目插入执行失败 %v", err)
+				// 防止脏读
+				dao.RedisClient.Del(dao.Ctx, videoFavoriteCountKey)
+				return err
+			}
+
+			//if _, err := dao.RedisClient.Expire(dao.Ctx, videoFavoriteCountKey, time.Minute*5).Result(); err != nil {
+			//	logging.Errorf("方法favoriteAction：设置过期时间失败%v", err)
+			//	dao.RedisClient.Del(dao.Ctx, videoFavoriteCountKey)
+			//	return err
+			//}
+			if _, err := dao.RedisClient.Decr(dao.Ctx, videoFavoriteCountKey).Result(); err != nil {
+				logging.Errorf("方法favoriteAction:video点赞数目+1执行失败 %v", err)
+				// 防止脏读
+				dao.RedisClient.Del(dao.Ctx, videoFavoriteCountKey)
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -160,3 +236,38 @@ func FavoriteList(userId uint) ([]db.Video, error) {
 	}
 	return videoList, nil
 }
+
+//func GetFavoriteVideoListRedisFirst(userId uint) ([]int, error) {
+//	strUserId := strconv.Itoa(int(userId))
+//	key := util.KeyUserFavoriteVideo(userId)
+//	if n, err := dao.RedisClient.Exists(dao.Ctx, key).Result(); n > 0 { //缓存存在
+//		if err != nil {
+//			logging.Error("方法GetUserFavoriteVideoList: 缓存获取用户喜爱列表失败%v", err)
+//			return nil, err
+//		}
+//		if strVideoIdList, err := dao.RedisClient.SMembers(dao.Ctx, key).Result(); err != nil {
+//			logging.Error("方法GetUserFavoriteVideoList: 缓存获取用户喜爱列表失败%v", err)
+//			return nil, err
+//		} else {
+//			videoIdList := utils.String2Int(strVideoIdList)
+//			return videoIdList, nil
+//		}
+//	} else { //缓存不存在
+//		// 从数据库查询，并加载到缓存中
+//		videoIdList := like.GetFavoriteVideoIdList(userId)
+//		for _, value := range videoIdList {
+//			if _, err := dao.RedisClient.SAdd(dao.Ctx, key, value).Result(); err != nil {
+//				logging.Error("方法GetUserFavoriteVideoList: 用户喜爱列表加载入缓存失败%v\", err")
+//				dao.RedisClient.Del(dao.Ctx, strUserId)
+//				return nil, err
+//			}
+//		}
+//		if _, err := dao.RedisClient.Expire(dao.Ctx, strUserId, time.Minute*5).Result(); err != nil {
+//			logging.Error("方法favoriteAction：设置过期时间失败%v", err)
+//			dao.RedisClient.Del(dao.Ctx, strUserId)
+//			return nil, err
+//		}
+//		return videoIdList, nil
+//
+//	}
+//}

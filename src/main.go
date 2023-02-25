@@ -9,6 +9,7 @@ import (
 	"github.com/mokeeqian/tiny-douyin/src/dao"
 	"github.com/mokeeqian/tiny-douyin/src/model/db"
 	"github.com/mokeeqian/tiny-douyin/src/routes"
+	"github.com/mokeeqian/tiny-douyin/src/task"
 	"github.com/mokeeqian/tiny-douyin/src/util"
 )
 
@@ -33,6 +34,9 @@ func main() {
 
 	// 注册路由
 	r := routes.InitRouter()
+
+	// 开启定时任务
+	task.CronTaskSetUp()
 
 	dao.SqlSession.AutoMigrate(&db.User{})
 	dao.SqlSession.AutoMigrate(&db.Video{})

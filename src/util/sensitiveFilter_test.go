@@ -11,5 +11,4 @@ func TestFilter(t *testing.T) {
 	content := "AV 123 色情"
 	contentFiltered := Filter.Replace(content, '*')
 	fmt.Println(contentFiltered)
-
 }
