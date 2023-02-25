@@ -10,6 +10,9 @@ func CronTaskSetUp() {
 	err := c.AddJob("0/30 * * * * ?", service.SaveRedisFavoriteToMysqlJob{
 		Name: "save favorite to db",
 	})
+	err = c.AddJob("0/30 * * * * ?", service.SaveFavoriteCountToMysqlJob{
+		Name: "save favorite count to db",
+	})
 	if err != nil {
 		return
 	}

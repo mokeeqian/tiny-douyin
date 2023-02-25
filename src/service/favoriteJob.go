@@ -14,5 +14,5 @@ func (saveRedisFavoriteToMysqlJob SaveRedisFavoriteToMysqlJob) Run() {
 }
 
 func (saveFavoriteCountToMysqlJob SaveFavoriteCountToMysqlJob) Run() {
-
+	SaveRedisFavoriteCountToMysql()
 }
