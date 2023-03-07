@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.8.2
+	github.com/go-redis/redis_rate/v9 v9.1.2
 	github.com/henrylee2cn/goutil v1.0.1
 	github.com/importcjj/sensitive v0.0.0-20200106142752-42d1c505be7b
 	github.com/jinzhu/gorm v1.9.16

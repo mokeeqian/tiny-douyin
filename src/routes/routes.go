@@ -7,6 +7,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis_rate/v9"
 	"github.com/mokeeqian/tiny-douyin/src/controller"
 	_ "github.com/mokeeqian/tiny-douyin/src/docs" // 这里需要引入本地已生成文档
 	"github.com/mokeeqian/tiny-douyin/src/middleware"
@@ -37,7 +38,8 @@ func InitRouter() *gin.Engine {
 		}
 
 		// feed
-		douyinGroup.GET("/feed/", controller.Feed)
+		// 限流，每秒请求一次
+		douyinGroup.GET("/feed/", middleware.NewRateLimiter("/douyin/feed/", true, redis_rate.PerSecond(1)), controller.Feed)
 
 		// favorite
 		favoriteGroup := douyinGroup.Group("favorite")
