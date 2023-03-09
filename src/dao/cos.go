@@ -5,7 +5,7 @@ const (
 	COS_BUCKET_NAME = ""
 	COS_APP_ID      = ""
 	COS_REGION      = ""
-	COS_SECRET_ID   = "AKIDXwNBnCMK6kGGiBSWPBm8LPHvLadS1RrI"
-	COS_SECRET_KEY  = "OYWUIwPgmhQr7Azc8PSTLfw2yjJiw56v"
-	COS_URL         = "https://qian-1258498110.cos.ap-nanjing.myqcloud.com"
+	COS_SECRET_ID   = ""
+	COS_SECRET_KEY  = ""
+	COS_URL         = ""
 )
