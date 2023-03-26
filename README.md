@@ -2,7 +2,8 @@
 A Simple Backend Service for Short Video Platform Implements by Golang
 
 ## 成果
-![img.png](resource/pic/成果.png)
+
+<img alt="img.png" height="336" src="resource/pic/成果.png" width="238"/>
 
 ## 环境
 使用 Windows 环境进行开发
