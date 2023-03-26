@@ -1,8 +1,11 @@
 # tiny-douyin
 A Simple Backend Service for Short Video Platform Implements by Golang
 
+## 成果
+![img.png](resource/pic/成果.png)
+
 ## 环境
-使用 Windows 环境进行开发（wsl的ip问题没能解决，关机后ip会变）
+使用 Windows 环境进行开发
 
 ## 系统设计
 ### 需求分析
@@ -52,7 +55,6 @@ A Simple Backend Service for Short Video Platform Implements by Golang
 ## TODO
 - 热点数据缓存
 - 分库分表、读写分离
-- MQ 异步处理点赞、关注、评论
 - 接口限流熔断降级
 - 微服务化
 - 响应结构体解耦

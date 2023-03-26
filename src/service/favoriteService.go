@@ -79,6 +79,7 @@ func FavoriteAction(userId uint, videoId uint, actionType uint) (err error) {
 				// 将点赞/取消点赞 缓存 在redis中，以"strUserId:videoId的形式存储"，按照 时间顺序，定期更新回数据库
 				// TODO: 使用 RocketMQ 重构
 				dao.RedisClient.LPush(dao.Ctx, "likeAdd", strUserId+":"+strVideoId)
+
 			}
 		} else {
 			//2 未缓存
